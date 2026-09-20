@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FundFlow - Student Budget & Financial Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brandGreen: '#33CC66',
+                        brandBlue: '#3399FF',
+                        brandDark: '#1E293B',
+                        brandLight: '#F8FAFC'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-brand {
+            background: linear-gradient(135deg, #33CC66 0%, #3399FF 100%);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #33CC66 0%, #3399FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .active-tab-indicator {
+            border-bottom: 3px solid #3399FF;
+            color: #3399FF;
+            font-weight: 600;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(51, 153, 255, 0.08), 0 8px 10px -6px rgba(51, 204, 102, 0.05);
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #33CC66;
+            opacity: 0.8;
+            animation: confetti-fall 2.5s ease-in-out infinite;
+            z-index: 20;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col antialiased selection:bg-brandBlue selection:text-white">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Brand Logo -->
+                 <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                  <img src="logosementara.jpeg" alt="FundFlow Logo" class="w-10 h-10 object-contain rounded-xl shadow-sm">
+                  <span class="text-2xl font-extrabold tracking-tight text-gradient">FundFlow</span>
+                </div>
+
+                <!-- Navigation Tabs (Desktop) -->
+                <nav class="hidden md:flex space-x-8 h-full">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all duration-200 active-tab-indicator">
+                        <i class="fa-solid fa-gauge-high mr-2"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('goals')" id="nav-goals" class="tab-btn inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all duration-200">
+                        <i class="fa-solid fa-bullseye mr-2"></i> Goals
+                    </button>
+                    <button onclick="switchTab('insight')" id="nav-insight" class="tab-btn inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all duration-200">
+                        <i class="fa-solid fa-chart-pie mr-2"></i> Insight
+                    </button>
+                    <button onclick="switchTab('profile')" id="nav-profile" class="tab-btn inline-flex items-center px-1 pt-1 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-all duration-200">
+                        <i class="fa-solid fa-user-gear mr-2"></i> Profile
+                    </button>
+                </nav>
+
+                <!-- User Profile Bar -->
+                <div onclick="switchTab('profile')" class="hidden sm:flex items-center gap-3 bg-slate-100 py-1.5 px-3 rounded-full cursor-pointer hover:bg-slate-200 transition">
+                    <img src="profile.jpg" alt="Student Profile" class="w-7 h-7 rounded-full object-cover border border-white">
+                    <span class="text-xs font-semibold text-slate-700">Tomioka Giyu</span>
+                </div>
+
+                <!-- Mobile Navigation Icon -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="text-slate-600 hover:text-slate-900 focus:outline-none p-2 rounded-lg bg-slate-100">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Container -->
+        <div id="mobile-menu" class="hidden md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2">
+            <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i class="fa-solid fa-gauge-high text-brandBlue"></i> Dashboard
+            </button>
+            <button onclick="switchTab('goals'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i class="fa-solid fa-bullseye text-brandBlue"></i> Goals
+            </button>
+            <button onclick="switchTab('insight'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i class="fa-solid fa-chart-pie text-brandBlue"></i> Insight
+            </button>
+            <button onclick="switchTab('profile'); toggleMobileMenu()" class="w-full text-left px-3 py-2 rounded-lg text-base font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-3">
+                <i class="fa-solid fa-user-gear text-brandBlue"></i> Profile
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content block space-y-8">
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl gradient-brand p-8 text-white shadow-xl">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-3">Master Your Money</span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">Welcome Tomioka Giyu! 👋</h1>
+                    <p class="text-white/90 text-base sm:text-lg">Live, learn, and manage your budget realistically. Take control of your daily student finances and map out your targets.</p>
+                </div>
+                <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="absolute right-32 -top-12 w-48 h-48 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+            </div>
+
+            <!-- Simulation & Overview Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Interactive Budget Simulator Card -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-6 sm:p-8 border border-slate-100 card-shadow">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-calculator text-brandGreen"></i> Start Simulation
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Adjust inputs to calculate real-time student budget balance</p>
+                        </div>
+                        <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md border border-emerald-200">Interactive</span>
+                    </div>
+
+                    <form id="sim-form" onsubmit="event.preventDefault();" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Monthly Allowance (IDR)</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-semibold text-xs">IDR</span>
+                                    <input type="number" id="sim-allowance" value="2500000" oninput="calculateBudget()" class="w-full pl-12 pr-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brandBlue focus:border-brandBlue outline-none text-slate-800 font-semibold text-sm transition">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Side Income (IDR)</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-semibold text-xs">IDR</span>
+                                    <input type="number" id="sim-income" value="1200000" oninput="calculateBudget()" class="w-full pl-12 pr-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brandBlue focus:border-brandBlue outline-none text-slate-800 font-semibold text-sm transition">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Estimated Monthly Expenses (IDR)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-semibold text-xs">IDR</span>
+                                <input type="number" id="sim-expenses" value="1850000" oninput="calculateBudget()" class="w-full pl-12 pr-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brandBlue focus:border-brandBlue outline-none text-slate-800 font-semibold text-sm transition">
+                            </div>
+                        </div>
+
+                        <!-- Calculation Summary -->
+                        <div class="p-5 bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl border border-slate-200/80 space-y-3">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-slate-600">Total Inflow:</span>
+                                <span id="res-inflow" class="font-bold text-slate-800">IDR 3.700.000</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-slate-600">Total Outflow:</span>
+                                <span id="res-outflow" class="font-bold text-rose-500">-IDR 1.850.000</span>
+                            </div>
+                            <hr class="border-slate-200">
+                            <div class="flex justify-between items-center">
+                                <span class="text-base font-bold text-slate-900">Net Monthly Savings:</span>
+                                <span id="res-balance" class="text-xl font-extrabold text-brandGreen">IDR 1.850.000</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Targets Quick Overview Cards -->
+                <div class="lg:col-span-5 space-y-5">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xl font-bold text-slate-900">Target Progress</h2>
+                        <button onclick="switchTab('goals')" class="text-xs font-semibold text-brandBlue hover:underline flex items-center gap-1">Manage <i class="fa-solid fa-arrow-right text-[10px]"></i></button>
+                    </div>
+
+                    <!-- Target Card 1: Emergency Fund -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 card-shadow transition hover:translate-y-[-2px]">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-brandGreen flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800">Emergency Fund</h3>
+                                    <p id="dash-goal1-text" class="text-xs text-slate-500">IDR 200.000 of IDR 500.000 saved</p>
+                                </div>
+                            </div>
+                            <span id="dash-goal1-pct" class="text-sm font-extrabold text-brandGreen">40%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div id="dash-goal1-bar" class="gradient-brand h-3 rounded-full transition-all duration-500" style="width: 40%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Target Card 2: Tuition Payment -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 card-shadow transition hover:translate-y-[-2px]">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-100 text-brandBlue flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-graduation-cap"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800">Tuition Payment</h3>
+                                    <p id="dash-goal2-text" class="text-xs text-slate-500">IDR 4.200.000 of IDR 6.500.000 saved</p>
+                                </div>
+                            </div>
+                            <span id="dash-goal2-pct" class="text-sm font-extrabold text-brandBlue">64,62%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div id="dash-goal2-bar" class="bg-brandBlue h-3 rounded-full transition-all duration-500" style="width: 64.62%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Target Card 3: Travel Fund -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 card-shadow transition hover:translate-y-[-2px]">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-500 flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-plane"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800">Travel Fund</h3>
+                                    <p id="dash-goal3-text" class="text-xs text-slate-500">IDR 1.450.000 of IDR 3.500.000 saved</p>
+                                </div>
+                            </div>
+                            <span id="dash-goal3-pct" class="text-sm font-extrabold text-indigo-500">41,43%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div id="dash-goal3-bar" class="bg-indigo-500 h-3 rounded-full transition-all duration-500" style="width: 41.43%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: GOALS -->
+        <section id="tab-goals" class="tab-content hidden space-y-6">
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900">Goal Planning & Allocation</h1>
+                <p class="text-slate-500 text-sm">Dynamically adjust monthly contributions in IDR to re-calculate completion projections and progress.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Goal Item 1: Emergency Fund -->
+                <div class="bg-white rounded-2xl border border-slate-100 p-6 card-shadow space-y-5 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="p-3 bg-emerald-100 text-brandGreen rounded-xl">
+                                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-lg">Emergency Fund</h3>
+                                    <p class="text-xs text-slate-500">Target: IDR 500.000</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                <span id="goal1-saved-text">Saved: IDR 200.000</span>
+                                <span id="goal1-pct-text" class="text-brandGreen font-extrabold">40%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                                <div id="goal1-progress-bar" class="gradient-brand h-3 rounded-full transition-all duration-300" style="width: 40%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Monthly Contribution (IDR)</label>
+                            <input type="range" min="10000" max="200000" value="100000" step="10000" oninput="updateGoalDynamic(1, this.value, 100000, 500000)" class="w-full accent-brandGreen cursor-pointer">
+                            <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                <span>IDR 10.000</span>
+                                <span id="goal1-val" class="font-bold text-slate-800">IDR 100.000</span>
+                                <span>IDR 200.000</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/60 text-xs flex justify-between">
+                            <span class="text-slate-500">Estimated Target Date:</span>
+                            <span id="goal1-date" class="font-bold text-slate-800">Nov 30, 2026 (3 mos)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Item 2: Tuition Payment -->
+                <div class="bg-white rounded-2xl border border-slate-100 p-6 card-shadow space-y-5 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="p-3 bg-blue-100 text-brandBlue rounded-xl">
+                                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-lg">Tuition Payment</h3>
+                                    <p class="text-xs text-slate-500">Target: IDR 6.500.000</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                <span id="goal2-saved-text">Saved: IDR 4.200.000</span>
+                                <span id="goal2-pct-text" class="text-brandBlue font-extrabold">64.62%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                                <div id="goal2-progress-bar" class="bg-brandBlue h-3 rounded-full transition-all duration-300" style="width: 64.62%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Monthly Contribution (IDR)</label>
+                            <input type="range" min="100000" max="1500000" value="750000" step="50000" oninput="updateGoalDynamic(2, this.value, 3450000, 6500000)" class="w-full accent-brandBlue cursor-pointer">
+                            <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                <span>IDR 100.000</span>
+                                <span id="goal2-val" class="font-bold text-slate-800">IDR 750.000</span>
+                                <span>IDR 1.5M</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/60 text-xs flex justify-between">
+                            <span class="text-slate-500">Estimated Target Date:</span>
+                            <span id="goal2-date" class="font-bold text-slate-800">Jan 15, 2027 (4 mos)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Item 3: Travel Fund -->
+                <div class="bg-white rounded-2xl border border-slate-100 p-6 card-shadow space-y-5 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="p-3 bg-indigo-100 text-indigo-500 rounded-xl">
+                                    <i class="fa-solid fa-plane text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 text-lg">Travel Fund</h3>
+                                    <p class="text-xs text-slate-500">Target: IDR 3.500.000</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-semibold text-slate-600 mb-1">
+                                <span id="goal3-saved-text">Saved: IDR 1.450.000</span>
+                                <span id="goal3-pct-text" class="text-indigo-500 font-extrabold">41.43%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                                <div id="goal3-progress-bar" class="bg-indigo-500 h-3 rounded-full transition-all duration-300" style="width: 41.43%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Monthly Contribution (IDR)</label>
+                            <input type="range" min="100000" max="1000000" value="300000" step="50000" oninput="updateGoalDynamic(3, this.value, 1150000, 3500000)" class="w-full accent-indigo-500 cursor-pointer">
+                            <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                <span>IDR 100.000</span>
+                                <span id="goal3-val" class="font-bold text-slate-800">IDR 300.000</span>
+                                <span>IDR 1M</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-t border-slate-200/60 text-xs flex justify-between">
+                            <span class="text-slate-500">Estimated Target Date:</span>
+                            <span id="goal3-date" class="font-bold text-slate-800">Apr 10, 2027 (8 mos)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: INSIGHT -->
+        <section id="tab-insight" class="tab-content hidden space-y-6">
+            <div class="text-center space-y-1">
+                <h1 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">GOAL ATTENDANCE & ANALYTICS</h1>
+                <p class="text-sm text-gray-500">Analysis of monthly expenses and savings achievement history<</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Doughnut Chart: Monthly Expenses -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-gray-800 text-center">Monthly Expenses</h3>
+                    <div class="w-64 h-64 mx-auto relative">
+                        <canvas id="expensesChart"></canvas>
+                    </div>
+                    <!-- Custom Legend -->
+                    <div class="grid grid-cols-2 gap-2 text-xs font-semibold text-gray-600 pt-4 border-t">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-emerald-500 rounded-full inline-block"></span>
+                            <span>Makanan: IDR 750.000</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-blue-500 rounded-full inline-block"></span>
+                            <span>Kos & Listrik: IDR 600.000</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-amber-500 rounded-full inline-block"></span>
+                            <span>Transport: IDR 200.000</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-indigo-500 rounded-full inline-block"></span>
+                            <span>Hiburan: IDR 200.000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bar Chart: Monthly Savings vs Goal Target -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                    <h3 class="font-bold text-gray-800 text-center">Monthly Savings vs Goal Target</h3>
+                    <div class="h-64">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 text-center">Comparison chart of actual savings vs monthly target (in thousands of IDR))</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: PROFILE -->
+        <section id="tab-profile" class="tab-content hidden space-y-8">
+            <!-- User Profile Card -->
+            <div class="bg-white rounded-2xl border border-slate-100 p-6 card-shadow flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                <img src="profile.jpg" alt="Tomioka Giyu" class="w-24 h-24 rounded-full object-cover border-4 border-emerald-100 shadow-md">
+                <div class="space-y-2 text-center sm:text-left flex-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-900">Tomioka Giyu</h2>
+                            <p class="text-xs text-slate-500 font-medium">Undergraduate Student • Finance Major</p>
+                        </div>
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold rounded-full text-xs self-center sm:self-auto flex items-center gap-1"><i class="fa-solid fa-circle-check text-brandGreen"></i> Verified Student</span>
+                    </div>
+                    <div class="pt-2 flex flex-wrap gap-4 text-xs text-slate-600 justify-center sm:justify-start">
+                        <span><i class="fa-solid fa-building-columns text-slate-400 mr-1"></i>Indonesia University of Education</span>
+                        <span><i class="fa-solid fa-envelope text-slate-400 mr-1"></i> tomiokagiyu82@upi.edu</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Milestone Showcase Banner -->
+            <div id="milestone-container" class="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600 rounded-3xl p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="flex items-center gap-6 z-10">
+                    <div class="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-amber-300 text-4xl shadow-inner shrink-0">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <span class="bg-amber-400 text-slate-900 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1 inline-block">MILESTONE REACHED</span>
+                        <h3 class="text-xl sm:text-2xl font-extrabold">Tuition Payment Milestone!</h3>
+                        <p class="text-white/90 text-xs sm:text-sm mt-1">Congratulations! You've reached <span id="profile-milestone-pct">64.62%</span> of your Tuition Payment goal!</p>
+                    </div>
+                </div>
+
+                <!-- Interactive Action Buttons -->
+                <div class="flex items-center gap-3 w-full md:w-auto z-10">
+                    <button onclick="triggerCelebration()" class="flex-1 md:flex-none px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-sparkles"></i> CELEBRATE
+                    </button>
+                    <button onclick="openDetailsModal()" class="flex-1 md:flex-none px-6 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2">
+                        VIEW DETAILS
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- View Details Modal Overlay -->
+    <div id="details-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 card-shadow">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-extrabold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-500"></i> Milestone Breakdown
+                </h3>
+                <button onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-sm text-slate-600">
+                <p>You have systematically saved <strong id="modal-saved-text" class="text-slate-800">IDR 4.200.000</strong> out of your <strong class="text-slate-800">IDR 6.500.000</strong> Tuition Payment target.</p>
+                <div class="p-4 bg-slate-50 rounded-xl text-xs space-y-2 border border-slate-100">
+                    <div class="flex justify-between"><span>Started Date:</span> <strong class="text-slate-800">August, 2026</strong></div>
+                    <div class="flex justify-between"><span>Average Monthly Contribution:</span> <strong id="modal-contrib-text" class="text-slate-800">IDR 750.000</strong></div>
+                    <div class="flex justify-between"><span>Projected Target Completion:</span> <strong id="modal-target-date" class="text-slate-800">January 2027</strong></div>
+                </div>
+            </div>
+            <button onclick="closeDetailsModal()" class="w-full py-2.5 bg-brandBlue text-white font-bold rounded-xl text-sm hover:bg-blue-600 transition shadow-md">Close</button>
+        </div>
+    </div>
+
+    <!-- Notification Toast Badge -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl z-50 hidden flex items-center gap-3 text-xs font-semibold">
+        <i class="fa-solid fa-circle-check text-brandGreen text-base"></i>
+        <span id="toast-message">🎉 Celebration triggered! Keep up the good work!</span>
+    </div>
+
+    <script>
+        let expensesChartInstance = null;
+        let savingsChartInstance = null;
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active-tab-indicator');
+                btn.classList.add('text-slate-500', 'border-transparent');
+            });
+
+            const targetTab = document.getElementById('tab-' + tabId);
+            if (targetTab) targetTab.classList.remove('hidden');
+
+            const targetBtn = document.getElementById('nav-' + tabId);
+            if (targetBtn) {
+                targetBtn.classList.add('active-tab-indicator');
+                targetBtn.classList.remove('text-slate-500', 'border-transparent');
+            }
+
+            if (tabId === 'insight') {
+                renderCharts();
+            }
+        }
+
+        // Toggle Mobile Navigation
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Currency Formatter Helper
+        function formatIDR(amount) {
+            return 'IDR ' + new Intl.NumberFormat('id-ID').format(amount);
+        }
+
+        // Calculator Simulation Logic
+        function calculateBudget() {
+            const allowance = parseFloat(document.getElementById('sim-allowance').value) || 0;
+            const income = parseFloat(document.getElementById('sim-income').value) || 0;
+            const expenses = parseFloat(document.getElementById('sim-expenses').value) || 0;
+
+            const inflow = allowance + income;
+            const balance = inflow - expenses;
+
+            document.getElementById('res-inflow').textContent = formatIDR(inflow);
+            document.getElementById('res-outflow').textContent = '-' + formatIDR(expenses);
+            
+            const balanceEl = document.getElementById('res-balance');
+            balanceEl.textContent = formatIDR(balance);
+
+            if (balance < 0) {
+                balanceEl.className = 'text-xl font-extrabold text-rose-500';
+            } else {
+                balanceEl.className = 'text-xl font-extrabold text-brandGreen';
+            }
+        }
+
+        // Real-Time Dynamic Goal Calculation & Sync across Dashboard & Profile
+        function updateGoalDynamic(id, monthlyVal, baseSaved, targetTotal) {
+            const monthly = parseFloat(monthlyVal) || 0;
+            const totalSaved = baseSaved + monthly;
+            let percentage = (totalSaved / targetTotal) * 100;
+            if (percentage > 100) percentage = 100;
+
+            const pctFormatted = percentage.toFixed(percentage % 1 === 0 ? 0 : 2) + '%';
+            const remainingNeeded = targetTotal - totalSaved;
+            const monthsLeft = remainingNeeded > 0 ? Math.ceil(remainingNeeded / monthly) : 0;
+
+            // 1. Update Goals Tab UI
+            document.getElementById('goal' + id + '-val').textContent = formatIDR(monthly);
+            document.getElementById('goal' + id + '-saved-text').textContent = 'Saved: ' + formatIDR(totalSaved);
+            document.getElementById('goal' + id + '-pct-text').textContent = pctFormatted;
+            
+            const progressBar = document.getElementById('goal' + id + '-progress-bar');
+            if (progressBar) progressBar.style.width = pctFormatted;
+
+            document.getElementById('goal' + id + '-date').textContent = monthsLeft > 0 
+                ? '~' + monthsLeft + ' month(s) projected' 
+                : 'Goal Achieved!';
+
+            // 2. Sync to Dashboard Tab UI
+            const dashText = document.getElementById('dash-goal' + id + '-text');
+            const dashPct = document.getElementById('dash-goal' + id + '-pct');
+            const dashBar = document.getElementById('dash-goal' + id + '-bar');
+
+            if (dashText) dashText.textContent = formatIDR(totalSaved) + ' of ' + formatIDR(targetTotal) + ' saved';
+            if (dashPct) dashPct.textContent = pctFormatted;
+            if (dashBar) dashBar.style.width = pctFormatted;
+
+            // 3. Sync Goal 2 (Tuition Payment) to Profile Tab & Modal
+            if (id === 2) {
+                const profilePct = document.getElementById('profile-milestone-pct');
+                const modalSaved = document.getElementById('modal-saved-text');
+                const modalContrib = document.getElementById('modal-contrib-text');
+                
+                if (profilePct) profilePct.textContent = pctFormatted;
+                if (modalSaved) modalSaved.textContent = formatIDR(totalSaved);
+                if (modalContrib) modalContrib.textContent = formatIDR(monthly);
+            }
+        }
+
+        // Confetti Trigger
+        function triggerCelebration() {
+            const container = document.getElementById('milestone-container');
+            const colors = ['#33CC66', '#3399FF', '#F59E0B', '#8B5CF6', '#FFFFFF'];
+
+            for (let i = 0; i < 35; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = (Math.random() * 0.4) + 's';
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 2500);
+            }
+
+            showToast("🎉 Celebration triggered! Keep up the good work!");
+        }
+
+        // Modal Controls
+        function openDetailsModal() {
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeDetailsModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3500);
+        }
+
+        // Chart.js Setup for Insights Tab
+        function renderCharts() {
+            if (expensesChartInstance) expensesChartInstance.destroy();
+            if (savingsChartInstance) savingsChartInstance.destroy();
+
+            // Chart 1: Monthly Expenses (Doughnut)
+            const ctx1 = document.getElementById('expensesChart').getContext('2d');
+            expensesChartInstance = new Chart(ctx1, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Food', 'Rent & Utilities', 'Transportation', 'Entertainment'],
+                    datasets: [{
+                        data: [750000, 600000, 200000, 200000],
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#6366F1'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.raw || 0;
+                                    return ' ' + label + ': IDR ' + (value / 1000) + 'k';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // Chart 2: Monthly Savings vs Goal Target (Bar)
+            const ctx2 = document.getElementById('savingsChart').getContext('2d');
+            savingsChartInstance = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['August', 'September', 'October', 'November', 'December'],
+                    datasets: [
+                        {
+                            label: 'Tabungan (IDR)',
+                            data: [400, 550, 700, 850, 950],
+                            backgroundColor: '#3B82F6',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Target (IDR)',
+                            data: [500, 600, 700, 800, 1000],
+                            backgroundColor: '#93C5FD',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.dataset.label + ': ' + context.raw;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1000,
+                            ticks: {
+                                stepSize: 100
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = function() {
+            calculateBudget();
+        };
+    </script>
+</body>
+</html>
